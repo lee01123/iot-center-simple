@@ -1,0 +1,182 @@
+📋 Kế hoạch Backend - Node.js + MongoDB
+🏗️ Kiến trúc tổng quan
+Frontend (React) ←→ REST API (Express.js) ←→ MongoDB Atlas
+                    ↕
+                  MQTT Broker (Mosquitto/HiveMQ)
+                    ↕
+              ESP8266/ESP32 Devices
+🗄️ Database Schema (MongoDB Collections)
+1. devices - Thông tin thiết bị
+
+
+{
+  _id: ObjectId,
+  deviceId: String (unique),
+  deviceName: String,
+  deviceType: String, // "ESP8266_D1_MINI" | "ESP32_NANO"
+  zone: String,
+  line: String,
+  process: String,
+  equipment: String,
+  status: String, // "online" | "offline"
+  lastSeen: Date,
+  createdAt: Date,
+  updatedAt: Date,
+  config: {
+    dataSendInterval: { value: Number, unit: String },
+    heartbeatInterval: { value: Number, unit: String }
+  }
+}
+2. sensors - Cấu hình sensor
+
+
+{
+  _id: ObjectId,
+  deviceId: String, // reference to devices
+  sensorType: String, // "temperature" | "humidity" | "light" | "led_rgb"
+  sensorName: String,
+  pinMappings: [{
+    sensorPin: String,
+    devicePin: String
+  }],
+  measurementRange: {
+    min: Number,
+    max: Number,
+    unit: String
+  },
+  errorMargin: Number,
+  datasheetUrl: String,
+  isActive: Boolean,
+  createdAt: Date,
+  updatedAt: Date
+}
+3. sensor_data - Dữ liệu từ sensor (Time-series)
+
+
+{
+  _id: ObjectId,
+  deviceId: String,
+  sensorId: String,
+  sensorType: String,
+  value: Number,
+  unit: String,
+  quality: String, // "good" | "warning" | "error"
+  timestamp: Date,
+  metadata: {
+    signalStrength: Number,
+    batteryLevel: Number
+  }
+}
+4. zones - Quản lý vùng
+
+
+{
+  _id: ObjectId,
+  zoneName: String,
+  lines: [String],
+  description: String,
+  floorPlan: {
+    imageUrl: String,
+    coordinates: Object
+  }
+}
+5. alerts - Cảnh báo
+
+
+{
+  _id: ObjectId,
+  deviceId: String,
+  sensorId: String,
+  alertType: String, // "threshold" | "offline" | "error"
+  severity: String, // "low" | "medium" | "high" | "critical"
+  message: String,
+  isResolved: Boolean,
+  createdAt: Date,
+  resolvedAt: Date
+}
+🔌 API Endpoints
+Device Management
+
+POST /api/devices - Tạo device mới
+GET /api/devices - Lấy danh sách devices (filter: zone, line, status)
+GET /api/devices/:id - Chi tiết device
+PUT /api/devices/:id - Cập nhật device
+DELETE /api/devices/:id - Xóa device
+POST /api/devices/:id/config - Cập nhật config (intervals)
+Sensor Configuration
+
+POST /api/sensors - Thêm sensor cho device
+GET /api/sensors?deviceId=xxx - Lấy sensors của device
+PUT /api/sensors/:id - Cập nhật sensor config
+DELETE /api/sensors/:id - Xóa sensor
+POST /api/sensors/bulk-import - Import JSON config
+Sensor Data
+
+POST /api/sensor-data - ESP gửi dữ liệu lên (from MQTT)
+GET /api/sensor-data?deviceId=xxx&from=...&to=... - Lấy dữ liệu theo khoảng thời gian
+GET /api/sensor-data/latest?deviceId=xxx - Dữ liệu mới nhất
+GET /api/sensor-data/statistics - Thống kê (min, max, avg)
+Zone & Line
+
+GET /api/zones - Danh sách zones
+GET /api/zones/:id/devices - Devices trong zone
+POST /api/zones - Tạo zone mới
+PUT /api/zones/:id - Cập nhật zone
+Alerts
+
+GET /api/alerts?status=unresolved - Danh sách cảnh báo
+POST /api/alerts/:id/resolve - Đánh dấu đã xử lý
+GET /api/alerts/statistics - Thống kê cảnh báo
+📡 MQTT Integration
+Topics Structure:
+
+iot/{zone}/{line}/{deviceId}/data        - Device gửi data
+iot/{zone}/{line}/{deviceId}/heartbeat   - Device heartbeat
+iot/{zone}/{line}/{deviceId}/status      - Status updates
+iot/{zone}/{line}/{deviceId}/config      - Server gửi config xuống
+MQTT Handler (Node.js):
+
+
+- Subscribe vào topics
+- Parse message từ ESP
+- Validate data
+- Lưu vào MongoDB (sensor_data collection)
+- Emit WebSocket event đến frontend (real-time update)
+- Check threshold → tạo alerts nếu cần
+🔒 Authentication & Authorization
+JWT tokens cho user authentication
+API Keys cho ESP devices
+Role-based access: Admin, Operator, Viewer
+📊 Real-time Communication
+WebSocket (Socket.io) cho real-time dashboard updates
+Events: device-status-change, new-sensor-data, alert-created
+⚡ Performance Optimization
+Indexing MongoDB:
+
+deviceId (unique index)
+timestamp (sensor_data - để query nhanh)
+zone + line (composite index)
+Caching (Redis):
+
+Cache latest sensor values (TTL: dataSendInterval)
+Cache device status
+Cache zone/line metadata
+Data Retention:
+
+Raw data: 30 ngày
+Aggregated data (hourly): 1 năm
+Aggregated data (daily): vĩnh viễn
+📦 Tech Stack
+- Runtime: Node.js v20+
+- Framework: Express.js
+- Database: MongoDB Atlas (hoặc self-hosted)
+- MQTT Broker: Mosquitto / HiveMQ Cloud
+- Cache: Redis (optional)
+- WebSocket: Socket.io
+- Authentication: JWT (jsonwebtoken)
+- Validation: Joi / Zod
+- ODM: Mongoose
+🚀 Deployment
+Backend: Docker container → AWS EC2 / DigitalOcean / Railway
+MongoDB: MongoDB Atlas (free tier M0)
+MQTT Broker: HiveMQ Cloud (free tier) hoặc self-hosted Mosquitto
