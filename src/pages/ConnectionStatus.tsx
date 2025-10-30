@@ -56,6 +56,15 @@ export default function ConnectionStatus() {
   const onlineCount = devices.filter((d) => d.status === "online").length;
   const offlineCount = devices.filter((d) => d.status === "offline").length;
 
+  // Count by zone
+  const zones = Array.from(new Set(devices.map((d) => d.zone)));
+  const getZoneCounts = (status?: "online" | "offline") => {
+    return zones.map((zone) => ({
+      zone,
+      count: devices.filter((d) => d.zone === zone && (!status || d.status === status)).length,
+    }));
+  };
+
   const getTimeSince = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
     if (seconds < 60) return "Just now";
@@ -80,7 +89,15 @@ export default function ConnectionStatus() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{devices.length}</div>
+            <div className="text-3xl font-bold mb-3">{devices.length}</div>
+            <div className="space-y-1">
+              {getZoneCounts().map(({ zone, count }) => (
+                <div key={zone} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{zone}</span>
+                  <span className="font-medium">{count}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -92,7 +109,15 @@ export default function ConnectionStatus() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-success">{onlineCount}</div>
+            <div className="text-3xl font-bold text-success mb-3">{onlineCount}</div>
+            <div className="space-y-1">
+              {getZoneCounts("online").map(({ zone, count }) => (
+                <div key={zone} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{zone}</span>
+                  <span className="font-medium text-success">{count}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -104,7 +129,15 @@ export default function ConnectionStatus() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-destructive">{offlineCount}</div>
+            <div className="text-3xl font-bold text-destructive mb-3">{offlineCount}</div>
+            <div className="space-y-1">
+              {getZoneCounts("offline").map(({ zone, count }) => (
+                <div key={zone} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{zone}</span>
+                  <span className="font-medium text-destructive">{count}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
