@@ -48,18 +48,18 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-sidebar-border relative">
-      {/* Floating toggle button when collapsed */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition-all duration-300 shadow-lg"
-          aria-label="Open sidebar"
-        >
-          <Radio className="h-5 w-5 text-sidebar-foreground" />
-        </button>
-      )}
-      <SidebarContent onDoubleClick={handleDoubleClick} className="cursor-pointer">
+    <Sidebar className="border-r border-sidebar-border">
+      <SidebarContent onDoubleClick={handleDoubleClick} className="cursor-pointer relative">
+        {/* Floating toggle button when collapsed */}
+        {!open && (
+          <button
+            onClick={() => setOpen(true)}
+            className="fixed left-6 top-1/2 -translate-y-1/2 z-50 h-10 w-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition-all duration-300 shadow-lg"
+            aria-label="Open sidebar"
+          >
+            <Radio className="h-5 w-5 text-sidebar-foreground" />
+          </button>
+        )}
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-gradient-primary flex items-center justify-center">
