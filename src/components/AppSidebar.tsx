@@ -22,14 +22,13 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Maps", url: "/maps", icon: Map },
+  { title: "Maps View", url: "/maps", icon: Map },
   { title: "Equipment View", url: "/devices", icon: LayoutDashboard },
   { title: "Device Control", url: "/control", icon: Sliders },
   { title: "Connection Status", url: "/status", icon: Wifi },
   { title: "MQTT Interface", url: "/mqtt", icon: Radio },
   { title: "FOTA Management", url: "/fota", icon: Upload },
-  { title: "Device-Sensor Mapping", url: "/device-config", icon: Settings },
-  { title: "Master Config", url: "/config", icon: Settings },
+  { title: "Master Config", url: "/master-config/device-sensor-mapping", icon: Settings },
 ];
 
 export function AppSidebar() {
